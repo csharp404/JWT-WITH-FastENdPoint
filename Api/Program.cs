@@ -1,4 +1,5 @@
 using System.Text;
+using Api.Caching;
 using Api.CachingServices;
 using Api.Data;
 using Api.GlobalException;
@@ -40,11 +41,11 @@ builder.Services.AddAuthentication(op =>
 );
 builder.Services.AddSingleton<IConnectionMultiplexer>(op =>
     ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis")));
-builder.Services.AddScoped<RedisService>();
+builder.Services.AddScoped<RedisCaching>();
 
 
 builder.Services.AddMemoryCache();
-builder.Services.AddScoped<MemoryService>();
+builder.Services.AddScoped<MemoryCaching>();
 
 builder.Services.AddFastEndpoints();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -60,9 +61,10 @@ if (app.Environment.IsDevelopment())
 
 
 
-app.MapGet("api/school/", (AppDbContext db) =>
+app.MapGet("api/school/", (RedisCaching service)  =>
 {
-    return Results.Ok(db.Schools.ToList());
+   
+    return Results.Ok(service.GetAll());
 });
 app.MapPost("api/school/", (School school,AppDbContext db) =>
 {
